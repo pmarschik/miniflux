@@ -40,7 +40,7 @@ func (c *Controller) FetchContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	content, err := scraper.Fetch(entry.URL, entry.Feed.ScraperRules)
+	content, err := scraper.Fetch(entry.URL, entry.Feed.ScraperRules, entry.Feed.Cookies)
 	if err != nil {
 		json.ServerError(w, err)
 		return

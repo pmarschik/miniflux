@@ -197,6 +197,7 @@ func (h *Handler) RefreshFeed(userID, feedID int64) error {
 		feedProcessor := processor.NewFeedProcessor(userID, h.store, subscription)
 		feedProcessor.WithScraperRules(originalFeed.ScraperRules)
 		feedProcessor.WithRewriteRules(originalFeed.RewriteRules)
+		feedProcessor.WithCookies(originalFeed.Cookies)
 		feedProcessor.WithCrawler(originalFeed.Crawler)
 		feedProcessor.Process()
 

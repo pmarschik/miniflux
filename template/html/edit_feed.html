@@ -64,6 +64,13 @@
         <label for="form-rewrite-rules">{{ t "Rewrite Rules" }}</label>
         <input type="text" name="rewrite_rules" id="form-rewrite-rules" value="{{ .form.RewriteRules }}">
 
+	    <label for="form-cookies">{{ t "Cookies" }}</label>
+	    <input type="text" name="cookies" id="form-cookies" value="
+        {{- range $key, $value := .form.Cookies -}}
+            {{- $key }}={{ $value -}};
+        {{- end -}}
+        ">
+
         <label for="form-category">{{ t "Category" }}</label>
         <select id="form-category" name="category_id">
         {{ range .categories }}

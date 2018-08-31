@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/lib/pq/hstore"
 	"time"
 
 	"miniflux.app/model"
@@ -66,7 +67,7 @@ func (s *Storage) Feeds(userID int64) (model.Feeds, error) {
 		f.id, f.feed_url, f.site_url, f.title, f.etag_header, f.last_modified_header,
 		f.user_id, f.checked_at at time zone u.timezone,
 		f.parsing_error_count, f.parsing_error_msg,
-		f.scraper_rules, f.rewrite_rules, f.crawler,
+		f.scraper_rules, f.rewrite_rules, f.cookies, f.crawler,
 		f.username, f.password,
 		f.category_id, c.title as category_title,
 		fi.icon_id,
@@ -88,6 +89,7 @@ func (s *Storage) Feeds(userID int64) (model.Feeds, error) {
 		var feed model.Feed
 		var iconID interface{}
 		var tz string
+		var cookies hstore.Hstore
 		feed.Category = &model.Category{UserID: userID}
 
 		err := rows.Scan(
@@ -103,6 +105,7 @@ func (s *Storage) Feeds(userID int64) (model.Feeds, error) {
 			&feed.ParsingErrorMsg,
 			&feed.ScraperRules,
 			&feed.RewriteRules,
+			&cookies,
 			&feed.Crawler,
 			&feed.Username,
 			&feed.Password,
@@ -120,6 +123,12 @@ func (s *Storage) Feeds(userID int64) (model.Feeds, error) {
 			feed.Icon = &model.FeedIcon{FeedID: feed.ID, IconID: iconID.(int64)}
 		}
 
+		for key, value := range cookies.Map {
+			if value.Valid {
+				feed.Cookies[key] = value.String
+			}
+		}
+
 		feed.CheckedAt = timezone.Convert(tz, feed.CheckedAt)
 		feeds = append(feeds, &feed)
 	}
@@ -134,6 +143,7 @@ func (s *Storage) FeedByID(userID, feedID int64) (*model.Feed, error) {
 	var feed model.Feed
 	var iconID interface{}
 	var tz string
+	var cookies hstore.Hstore
 	feed.Category = &model.Category{UserID: userID}
 
 	query := `
@@ -141,7 +151,7 @@ func (s *Storage) FeedByID(userID, feedID int64) (*model.Feed, error) {
 		f.id, f.feed_url, f.site_url, f.title, f.etag_header, f.last_modified_header,
 		f.user_id, f.checked_at at time zone u.timezone,
 		f.parsing_error_count, f.parsing_error_msg,
-		f.scraper_rules, f.rewrite_rules, f.crawler,
+		f.scraper_rules, f.rewrite_rules, f.cookies, f.crawler,
 		f.username, f.password,
 		f.category_id, c.title as category_title,
 		fi.icon_id,
@@ -165,6 +175,7 @@ func (s *Storage) FeedByID(userID, feedID int64) (*model.Feed, error) {
 		&feed.ParsingErrorMsg,
 		&feed.ScraperRules,
 		&feed.RewriteRules,
+		&cookies,
 		&feed.Crawler,
 		&feed.Username,
 		&feed.Password,
@@ -183,6 +194,13 @@ func (s *Storage) FeedByID(userID, feedID int64) (*model.Feed, error) {
 
 	if iconID != nil {
 		feed.Icon = &model.FeedIcon{FeedID: feed.ID, IconID: iconID.(int64)}
+	}
+
+	feed.Cookies = make(map[string]string, len(cookies.Map))
+	for key, value := range cookies.Map {
+		if value.Valid {
+			feed.Cookies[key] = value.String
+		}
 	}
 
 	feed.CheckedAt = timezone.Convert(tz, feed.CheckedAt)
@@ -234,9 +252,17 @@ func (s *Storage) UpdateFeed(feed *model.Feed) (err error) {
 
 	query := `UPDATE feeds SET
 		feed_url=$1, site_url=$2, title=$3, category_id=$4, etag_header=$5, last_modified_header=$6, checked_at=$7,
-		parsing_error_msg=$8, parsing_error_count=$9, scraper_rules=$10, rewrite_rules=$11, crawler=$12,
-		username=$13, password=$14
-		WHERE id=$15 AND user_id=$16`
+		parsing_error_msg=$8, parsing_error_count=$9, scraper_rules=$10, rewrite_rules=$11, cookies=$12, crawler=$13,
+		username=$14, password=$15
+		WHERE id=$16 AND user_id=$17`
+
+	cookies := hstore.Hstore{Map: make(map[string]sql.NullString)}
+
+	if len(feed.Cookies) > 0 {
+		for key, value := range feed.Cookies {
+			cookies.Map[key] = sql.NullString{String: value, Valid: true}
+		}
+	}
 
 	_, err = s.db.Exec(query,
 		feed.FeedURL,
@@ -250,6 +276,7 @@ func (s *Storage) UpdateFeed(feed *model.Feed) (err error) {
 		feed.ParsingErrorCount,
 		feed.ScraperRules,
 		feed.RewriteRules,
+		cookies,
 		feed.Crawler,
 		feed.Username,
 		feed.Password,

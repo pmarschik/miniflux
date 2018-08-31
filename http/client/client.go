@@ -47,6 +47,7 @@ type Client struct {
 	authorizationHeader string
 	username            string
 	password            string
+	cookies             map[string]string
 	Insecure            bool
 }
 
@@ -62,6 +63,14 @@ func (c *Client) WithCredentials(username, password string) *Client {
 // WithAuthorization defines authorization header value.
 func (c *Client) WithAuthorization(authorization string) *Client {
 	c.authorizationHeader = authorization
+	return c
+}
+
+func (c *Client) WithCookies(cookies map[string]string) *Client {
+	c.cookies = make(map[string]string, len(cookies))
+	for k, v := range cookies {
+		c.cookies[k] = v
+	}
 	return c
 }
 
@@ -196,6 +205,12 @@ func (c *Client) buildRequest(method string, body io.Reader) (*http.Request, err
 		request.SetBasicAuth(c.username, c.password)
 	}
 
+	if len(c.cookies) > 0 {
+		for name, value := range c.cookies {
+			request.AddCookie(&http.Cookie{Name: name, Value: value})
+		}
+	}
+
 	return request, nil
 }
 
@@ -233,5 +248,5 @@ func (c *Client) buildHeaders() http.Header {
 
 // New returns a new HTTP client.
 func New(url string) *Client {
-	return &Client{url: url, Insecure: false}
+	return &Client{url: url, Insecure: false, cookies: make(map[string]string, 0)}
 }

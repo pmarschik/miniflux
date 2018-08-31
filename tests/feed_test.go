@@ -195,6 +195,31 @@ func TestUpdateFeedRewriteRules(t *testing.T) {
 	}
 }
 
+func TestUpdateFeedCookies(t *testing.T) {
+	client := createClient(t)
+	feed, _ := createFeed(t, client)
+
+	cookies := "a=b;c=d"
+	updatedFeed, err := client.UpdateFeed(feed.ID, &miniflux.FeedModification{Cookies: &cookies})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if updatedFeed.Cookies != cookies {
+		t.Fatalf(`Wrong Cookies value, got "%v" instead of "%v"`, updatedFeed.RewriteRules, cookies)
+	}
+
+	cookies = ""
+	updatedFeed, err = client.UpdateFeed(feed.ID, &miniflux.FeedModification{Cookies: &cookies})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if updatedFeed.Cookies != cookies {
+		t.Fatalf(`Wrong Cookies value, got "%v" instead of "%v"`, updatedFeed.Cookies, cookies)
+	}
+}
+
 func TestUpdateFeedUsername(t *testing.T) {
 	client := createClient(t)
 	feed, _ := createFeed(t, client)

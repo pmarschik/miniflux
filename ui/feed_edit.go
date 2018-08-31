@@ -54,6 +54,7 @@ func (c *Controller) EditFeed(w http.ResponseWriter, r *http.Request) {
 		Title:        feed.Title,
 		ScraperRules: feed.ScraperRules,
 		RewriteRules: feed.RewriteRules,
+		Cookies:      feed.Cookies,
 		Crawler:      feed.Crawler,
 		CategoryID:   feed.Category.ID,
 		Username:     feed.Username,

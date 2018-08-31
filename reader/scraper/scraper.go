@@ -19,8 +19,8 @@ import (
 )
 
 // Fetch downloads a web page a returns relevant contents.
-func Fetch(websiteURL, rules string) (string, error) {
-	clt := client.New(websiteURL)
+func Fetch(websiteURL, rules string, cookies map[string]string) (string, error) {
+	clt := client.New(websiteURL).WithCookies(cookies)
 	response, err := clt.Get()
 	if err != nil {
 		return "", err

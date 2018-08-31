@@ -6,6 +6,7 @@ package storage // import "miniflux.app/storage"
 
 import (
 	"fmt"
+	"github.com/lib/pq/hstore"
 	"strings"
 	"time"
 
@@ -192,7 +193,7 @@ func (e *EntryQueryBuilder) GetEntries() (model.Entries, error) {
 		e.id, e.user_id, e.feed_id, e.hash, e.published_at at time zone u.timezone, e.title,
 		e.url, e.comments_url, e.author, e.content, e.status, e.starred,
 		f.title as feed_title, f.feed_url, f.site_url, f.checked_at,
-		f.category_id, c.title as category_title, f.scraper_rules, f.rewrite_rules, f.crawler,
+		f.category_id, c.title as category_title, f.scraper_rules, f.rewrite_rules, f.cookies, f.crawler,
 		fi.icon_id,
 		u.timezone
 		FROM entries e
@@ -220,6 +221,7 @@ func (e *EntryQueryBuilder) GetEntries() (model.Entries, error) {
 		var entry model.Entry
 		var iconID interface{}
 		var tz string
+		var cookies hstore.Hstore
 
 		entry.Feed = &model.Feed{}
 		entry.Feed.Category = &model.Category{}
@@ -246,6 +248,7 @@ func (e *EntryQueryBuilder) GetEntries() (model.Entries, error) {
 			&entry.Feed.Category.Title,
 			&entry.Feed.ScraperRules,
 			&entry.Feed.RewriteRules,
+			&cookies,
 			&entry.Feed.Crawler,
 			&iconID,
 			&tz,
@@ -259,6 +262,13 @@ func (e *EntryQueryBuilder) GetEntries() (model.Entries, error) {
 			entry.Feed.Icon.IconID = 0
 		} else {
 			entry.Feed.Icon.IconID = iconID.(int64)
+		}
+
+		entry.Feed.Cookies = make(map[string]string, len(cookies.Map))
+		for key, value := range cookies.Map {
+			if value.Valid {
+				entry.Feed.Cookies[key] = value.String
+			}
 		}
 
 		// Make sure that timestamp fields contains timezone information (API)

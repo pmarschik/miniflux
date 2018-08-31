@@ -38,15 +38,16 @@ type subscriptionDiscovery struct {
 }
 
 type feedModification struct {
-	FeedURL      *string `json:"feed_url"`
-	SiteURL      *string `json:"site_url"`
-	Title        *string `json:"title"`
-	ScraperRules *string `json:"scraper_rules"`
-	RewriteRules *string `json:"rewrite_rules"`
-	Crawler      *bool   `json:"crawler"`
-	Username     *string `json:"username"`
-	Password     *string `json:"password"`
-	CategoryID   *int64  `json:"category_id"`
+	FeedURL      *string            `json:"feed_url"`
+	SiteURL      *string            `json:"site_url"`
+	Title        *string            `json:"title"`
+	ScraperRules *string            `json:"scraper_rules"`
+	RewriteRules *string            `json:"rewrite_rules"`
+	Cookies      *map[string]string `json:"cookies"`
+	Crawler      *bool              `json:"crawler"`
+	Username     *string            `json:"username"`
+	Password     *string            `json:"password"`
+	CategoryID   *int64             `json:"category_id"`
 }
 
 func (f *feedModification) Update(feed *model.Feed) {
@@ -68,6 +69,10 @@ func (f *feedModification) Update(feed *model.Feed) {
 
 	if f.RewriteRules != nil {
 		feed.RewriteRules = *f.RewriteRules
+	}
+
+	if f.Cookies != nil {
+		feed.Cookies = *f.Cookies
 	}
 
 	if f.Crawler != nil {

@@ -20,6 +20,7 @@ type FeedProcessor struct {
 	feed         *model.Feed
 	scraperRules string
 	rewriteRules string
+	cookies      map[string]string
 	crawler      bool
 }
 
@@ -38,6 +39,14 @@ func (f *FeedProcessor) WithRewriteRules(rules string) {
 	f.rewriteRules = rules
 }
 
+// WithCookies adds cookies to the processing.
+func (f *FeedProcessor) WithCookies(cookies map[string]string) {
+	f.cookies = make(map[string]string, len(cookies))
+	for k, v := range cookies {
+		f.cookies[k] = v
+	}
+}
+
 // Process applies rewrite and scraper rules.
 func (f *FeedProcessor) Process() {
 	for _, entry := range f.feed.Entries {
@@ -45,7 +54,7 @@ func (f *FeedProcessor) Process() {
 			if f.store.EntryURLExists(f.userID, entry.URL) {
 				logger.Debug(`[FeedProcessor] Do not crawl existing entry URL: "%s"`, entry.URL)
 			} else {
-				content, err := scraper.Fetch(entry.URL, f.scraperRules)
+				content, err := scraper.Fetch(entry.URL, f.scraperRules, f.cookies)
 				if err != nil {
 					logger.Error("[FeedProcessor] %v", err)
 				} else {

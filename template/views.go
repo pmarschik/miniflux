@@ -450,6 +450,13 @@ var templateViewsMap = map[string]string{
         <label for="form-rewrite-rules">{{ t "Rewrite Rules" }}</label>
         <input type="text" name="rewrite_rules" id="form-rewrite-rules" value="{{ .form.RewriteRules }}">
 
+	    <label for="form-cookies">{{ t "Cookies" }}</label>
+	    <input type="text" name="cookies" id="form-cookies" value="
+	    {{ range $key, $value := .form.Cookies }}
+        {{ $key }}={{ $value }};
+        {{ end }}
+        ">
+
         <label for="form-category">{{ t "Category" }}</label>
         <select id="form-category" name="category_id">
         {{ range .categories }}
@@ -1340,7 +1347,7 @@ var templateViewsMapChecksums = map[string]string{
 	"create_category":     "2b82af5d2dcd67898dc5daa57a6461e6ff8121a6089b2a2a1be909f35e4a2275",
 	"create_user":         "1ef0a1f9bf119d44929c81f13073a257d69650cf5064960cf06a63fe51923e86",
 	"edit_category":       "cee720faadcec58289b707ad30af623d2ee66c1ce23a732965463250d7ff41c5",
-	"edit_feed":           "1a8e342e4fac80e8b9c73537c7fe8aaf7f9e3e7af22f411927010897dd37e9c3",
+	"edit_feed":           "391f7ecd1b162becea63282f0900e2573ead55e10dd037a20cb36eac428bc5ea",
 	"edit_user":           "7373e09f805e6c017167001519b9feb04226be6c81c2875cbacd5ce94f2c24bf",
 	"entry":               "1aa2767a879591f0a3681787fc9e2c53e06949695b21106286d190712a9f428a",
 	"feed_entries":        "76e7e32cdd6552304e38931459fe12cefdb5354f65a7ac3bbed52a2979896d3e",
